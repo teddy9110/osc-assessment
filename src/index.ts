@@ -5,10 +5,10 @@ import { json } from 'body-parser';
 import cors from 'cors';
 import { AppDataSource } from "./config/database";
 import { typeDefs } from "./schemas/schema";
-import { courseResolvers } from "./resolvers/courseResolver";
-import { authResolvers } from "./resolvers/authResolver";
 import { authenticate } from "./middleware/auth";
 import { UserPayload } from './types/user';
+import depthLimit from 'graphql-depth-limit';
+import resolvers from './resolvers';
 
 interface ApolloContext {
   user?: UserPayload;
@@ -18,16 +18,6 @@ interface ExpressContext {
   req: express.Request;
   res: express.Response;
 }
-
-const resolvers = {
-  Query: {
-    ...courseResolvers.Query,
-  },
-  Mutation: {
-    ...courseResolvers.Mutation,
-    ...authResolvers.Mutation,
-  },
-};
 
 async function startServer() {
   try {
@@ -42,6 +32,13 @@ async function startServer() {
     const server = new ApolloServer<ApolloContext>({
       typeDefs,
       resolvers,
+      validationRules: [depthLimit(3)],
+      formatError: (error) => {
+        if (error.message.startsWith('Query exceeds maximum depth')) {
+          return new Error('Query too nested. Please reduce query depth.');
+        }
+        return error;
+      },
       context: async ({ req }: ExpressContext): Promise<ApolloContext> => {
         const token = req.headers.authorization || '';
         return authenticate(token);
@@ -51,7 +48,7 @@ async function startServer() {
 
     await server.start();
 
-    server.applyMiddleware({ 
+    server.applyMiddleware({
       app: app as any,
       path: '/graphql',
       cors: {

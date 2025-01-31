@@ -5,6 +5,12 @@ import { User } from '../entities/User';
 import { config } from '../config/env';
 import { DeepPartial } from 'typeorm';
 
+// Import the UserRole enum
+enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER'
+}
+
 interface AuthInput {
   username: string;
   password: string;
@@ -18,7 +24,7 @@ interface AuthPayload {
 interface JWTPayload {
   id: string;
   username: string;
-  role: string;
+  role: UserRole; // Updated to use UserRole enum
 }
 
 export const authResolvers = {
@@ -36,7 +42,7 @@ export const authResolvers = {
       const userData: DeepPartial<User> = {
         username,
         password: hashedPassword,
-        role: 'USER'
+        role: UserRole.USER // Use enum instead of string
       };
 
       const user = userRepository.create(userData);
@@ -45,7 +51,7 @@ export const authResolvers = {
       const payload: JWTPayload = {
         id: savedUser.id,
         username: savedUser.username,
-        role: savedUser.role
+        role: savedUser.role as UserRole // Type assertion since we know it's UserRole
       };
 
       const token = sign(
@@ -78,7 +84,7 @@ export const authResolvers = {
       const payload: JWTPayload = {
         id: user.id,
         username: user.username,
-        role: user.role
+        role: user.role as UserRole // Type assertion since we know it's UserRole
       };
 
       const token = sign(

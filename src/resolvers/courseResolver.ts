@@ -11,6 +11,7 @@ interface CourseInput {
   duration: string;
   outcome: string;
   collectionId?: string;
+  createdAt?: Date;
 }
 
 export const courseResolvers = {

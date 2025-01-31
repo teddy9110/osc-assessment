@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  ManyToOne, 
+  CreateDateColumn, 
+  UpdateDateColumn 
+} from 'typeorm';
 import { Collection } from "./Collection";
 
 @Entity()
@@ -20,4 +27,10 @@ export class Course {
 
   @ManyToOne(() => Collection, (collection: { courses: any; }) => collection.courses)
   collection: Collection;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
